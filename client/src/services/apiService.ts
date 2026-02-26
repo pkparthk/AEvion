@@ -1,5 +1,3 @@
-// === AEVION API Service — aligned with FastAPI backend ===
-
 import axios, { AxiosResponse } from "axios";
 import type {
   GraphResponse,
@@ -43,12 +41,7 @@ const handleApiError = (error: any): ApiError => {
   };
 };
 
-// ─── API Service ────────────────────────────────────────────────────────────
-class AevionApiService {
-  /**
-   * GET /graph
-   * Returns all nodes (id, x, y, type) and edges (src, dst, distance, …).
-   */
+class AevionApiService {  
   async getGraph(): Promise<GraphResponse> {
     try {
       console.log("🌐 Fetching city graph…");
@@ -63,10 +56,6 @@ class AevionApiService {
     }
   }
 
-  /**
-   * GET /nodes
-   * Returns a sorted list of node IDs for dropdown menus.
-   */
   async getNodes(): Promise<string[]> {
     try {
       console.log("📍 Fetching node list…");
@@ -79,12 +68,6 @@ class AevionApiService {
     }
   }
 
-  /**
-   * GET /route?start=…&end=…&mode=…
-   * Runs the full KSP → Physics+LSTM → MILP pipeline.
-   * The SOC slider value is converted to an absolute kWh value here
-   * (backend default battery = 100 kWh).
-   */
   async optimizeRoute(request: RouteRequest): Promise<RouteResponse> {
     const { startNode, endNode, initialSOC_percent, mode = "time" } = request;
 
@@ -126,9 +109,6 @@ class AevionApiService {
     }
   }
 
-  /**
-   * GET /lstm/status
-   */
   async getLstmStatus(): Promise<LSTMStatus> {
     try {
       const res: AxiosResponse<LSTMStatus> =
@@ -139,9 +119,6 @@ class AevionApiService {
     }
   }
 
-  /**
-   * POST /lstm/toggle  { enabled: boolean }
-   */
   async toggleLstm(
     enabled: boolean,
   ): Promise<{ success: boolean; enabled: boolean; message: string }> {
@@ -153,7 +130,6 @@ class AevionApiService {
     }
   }
 
-  /** Simple connectivity check */
   async healthCheck(): Promise<boolean> {
     try {
       await apiClient.get("/graph", { timeout: 5000 });

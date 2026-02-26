@@ -23,7 +23,6 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({
     return null;
   }
 
-  // ── Derived quantities from backend RouteResult ─────────────────────────
   const BATTERY_CAP_KWH = 100.0; // matches backend default
   const totalDistanceKm = routeResult.total_distance_m / 1000;
   const totalEnergyKwh =

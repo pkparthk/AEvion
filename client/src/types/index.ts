@@ -15,7 +15,6 @@ export interface GraphEdge {
   visual_weight: number;
 }
 
-/** Full /graph response */
 export interface GraphResponse {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -56,8 +55,6 @@ export interface RouteResponse {
   reachable_nodes: string[];
 }
 
-// ─── Route request (sent as query-params to GET /route) ───────────────────
-
 export interface RouteRequest {
   startNode: string;
   endNode: string;
@@ -65,14 +62,10 @@ export interface RouteRequest {
   mode?: "time" | "cost" | "safety";
 }
 
-// ─── LSTM control (POST /lstm/toggle, GET /lstm/status) ───────────────────
-
 export interface LSTMStatus {
   enabled: boolean;
   [key: string]: any;
 }
-
-// ─── Component prop types ─────────────────────────────────────────────────
 
 export interface GraphViewProps {
   graphData: GraphResponse | null;
@@ -92,16 +85,14 @@ export interface StatsDisplayProps {
   isVisible: boolean;
 }
 
-// ─── API error ────────────────────────────────────────────────────────────
-
+//  API error 
 export interface ApiError {
   message: string;
   status?: number;
   details?: any;
 }
 
-// ─── Application state ────────────────────────────────────────────────────
-
+//  Application state
 export interface AppState {
   graphData: GraphResponse | null;
   nodes: string[];

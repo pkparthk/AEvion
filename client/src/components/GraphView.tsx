@@ -13,22 +13,20 @@ import {
 import * as d3 from "d3";
 import type { GraphViewProps, GraphNode, GraphEdge } from "../types";
 
-// ─── colour constants ────────────────────────────────────────────────────────
 const COL = {
-  edge: "#334155", // default edge (dark slate)
+  edge: "#334155", 
   edgeHover: "#64748b",
-  routeEdge: "#22d3ee", // cyan-400  — optimal path
-  node: "#3b82f6", // blue-500  — road node
-  charger: "#f59e0b", // amber-500 — charging station
-  routeNode: "#10b981", // emerald-500 — on optimal path
-  startNode: "#06b6d4", // cyan-500  — start
-  endNode: "#f43f5e", // rose-500  — end
-  chargeStop: "#fbbf24", // amber-400 — charging stop on route
-  bg: "#0f172a", // canvas background
+  routeEdge: "#22d3ee",
+  node: "#3b82f6", 
+  charger: "#f59e0b", 
+  routeNode: "#10b981", 
+  startNode: "#06b6d4", 
+  endNode: "#f43f5e",
+  chargeStop: "#fbbf24", 
+  bg: "#0f172a",
   gridLine: "#1e293b",
 };
 
-// ─── helper: build a Set of "src|dst" pairs for the optimal path ─────────────
 function buildRouteEdgeSet(path: string[]): Set<string> {
   const s = new Set<string>();
   for (let i = 0; i < path.length - 1; i++) {
@@ -61,7 +59,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     setSvgReady(!!node);
   }, []);
 
-  // ── resize observer ─────────────────────────────────────────────────────
+  //  resize observer 
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!containerRef.current) return;
@@ -73,9 +71,8 @@ const GraphView: React.FC<GraphViewProps> = ({
     return () => obs.disconnect();
   }, []);
 
-  // ── D3 zoom setup — run ONCE on mount so resize never tears it down ───────
-  useEffect(() => {
-    // Create the zoom behavior unconditionally so callbacks can reference it
+
+  useEffect(() => {    
     zoomRef.current = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.2, 8])
@@ -93,7 +90,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     // no cleanup — keep zoom for component lifetime
   }, []);
 
-  // ── fit graph to view whenever data changes ───────────────────────────────
+  //  fit graph to view whenever data changes 
   useEffect(() => {
     if (!graphData?.nodes.length || !svgRef.current || !zoomRef.current) return;
     const pad = 40;
@@ -118,7 +115,7 @@ const GraphView: React.FC<GraphViewProps> = ({
       );
   }, [graphData, dims]);
 
-  // ── ensure zoom is attached whenever the SVG / dims change ───────────────
+  //  ensure zoom is attached whenever the SVG / dims change
   useEffect(() => {
     if (!svgRef.current || !zoomRef.current) return;
     d3.select(svgRef.current).call(
@@ -126,7 +123,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     );
   }, [dims.w, dims.h, svgReady]);
 
-  // ── zoom controls ─────────────────────────────────────────────────────────
+  //  zoom controls 
   const zoomIn = useCallback(() => {
     if (!svgRef.current || !zoomRef.current) return;
     d3.select(svgRef.current)
@@ -165,7 +162,7 @@ const GraphView: React.FC<GraphViewProps> = ({
       );
   }, [graphData, dims]);
 
-  // ── render states ─────────────────────────────────────────────────────────
+  //  render states
   if (isLoading) {
     return (
       <motion.div
@@ -208,7 +205,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     );
   }
 
-  // ── derived data ──────────────────────────────────────────────────────────
+  //  derived data
   const routePath = routeResult?.path ?? [];
   const routeSet = new Set(routePath);
   const routeEdges = buildRouteEdgeSet(routePath);
@@ -269,7 +266,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     return parts.join(" · ");
   }
 
-  // ── sort edges: route edges drawn on top ──────────────────────────────────
+  //  sort edges: route edges drawn on top 
   const sortedEdges = [...graphData.edges].sort((a, b) => {
     const ar = routeEdges.has(`${a.src}|${a.dst}`) ? 1 : 0;
     const br = routeEdges.has(`${b.src}|${b.dst}`) ? 1 : 0;
@@ -283,7 +280,7 @@ const GraphView: React.FC<GraphViewProps> = ({
       transition={{ duration: 0.6 }}
       className="w-full glass-card-dark rounded-xl border border-electric-500/30 overflow-hidden backdrop-blur-xl"
     >
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/*  Header */}
       <div className="glass-dark border-b border-white/10 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Network size={20} className="text-electric-400" />
@@ -372,7 +369,7 @@ const GraphView: React.FC<GraphViewProps> = ({
         </div>
       </div>
 
-      {/* ── SVG Canvas ─────────────────────────────────────────────────── */}
+      {/*  SVG Canvas  */}
       <div
         ref={containerRef}
         className="relative w-full"
@@ -422,7 +419,7 @@ const GraphView: React.FC<GraphViewProps> = ({
           </defs>
 
           <g ref={gRef}>
-            {/* ── Edges ── */}
+            {/*  Edges  */}
             {sortedEdges.map((edge, i) => {
               const s = nodeById.get(edge.src);
               const t = nodeById.get(edge.dst);
@@ -444,7 +441,7 @@ const GraphView: React.FC<GraphViewProps> = ({
               );
             })}
 
-            {/* ── Nodes ── */}
+            {/*  Nodes  */}
             {graphData.nodes.map((node) => {
               const r = nodeRadius(node);
               const col = nodeColor(node);
@@ -516,7 +513,7 @@ const GraphView: React.FC<GraphViewProps> = ({
           </g>
         </svg>
 
-        {/* ── Tooltip ── */}
+        {/*  Tooltip  */}
         {tooltip && (
           <div
             className="absolute z-50 px-3 py-1.5 rounded-lg text-xs text-white font-medium pointer-events-none whitespace-nowrap"
@@ -532,7 +529,7 @@ const GraphView: React.FC<GraphViewProps> = ({
           </div>
         )}
 
-        {/* ── Route Summary Overlay ── */}
+        {/*  Route Summary Overlay  */}
         {routeResult && routePath.length > 0 && (
           <div className="absolute bottom-3 left-3 right-3 glass-card-dark rounded-lg px-4 py-2 border border-cyan-500/30 text-xs flex flex-wrap items-center gap-x-5 gap-y-1">
             <span className="text-cyan-300 font-semibold flex items-center gap-1">
