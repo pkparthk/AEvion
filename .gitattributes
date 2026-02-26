@@ -1,0 +1,5 @@
+# Use Git LFS for model weight files
+backend/*.h5 filter=lfs diff=lfs merge=lfs -text
+backend/*.pt filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text
