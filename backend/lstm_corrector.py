@@ -1,31 +1,4 @@
-﻿"""
-lstm_corrector.py  â€”  TensorFlow/Keras implementation
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-Bidirectional LSTM + MLP head that learns the residual between the EVPM
-physics-model energy estimate and real-world measured consumption.
-
-Architecture
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-Input  : (batch, seq_len, 4)   features per road edge
-           [evpm_energy_wh, distance_m, speed_kmph, slope]
-Body   : N Ã— Bidirectional LSTM  â†’  MLP (Dense â†’ LayerNorm â†’ Swish â†’ Dropout)
-Output : (batch, seq_len)        correction delta in Wh per edge
-
-The final Dense layer is zero-initialised so an untrained model is an
-identity map (delta â‰ˆ 0, corrected â‰ˆ EVPM baseline).
-
-Persistence
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  weights  â†’  <model_path>.weights.h5
-  metadata â†’  <model_path>.meta.json   (norm stats + loss history)
-
-Toggle
-â”€â”€â”€â”€â”€â”€
-  corrector.set_enabled(False)  â†’  bypass; pipeline uses raw EVPM values
-  corrector.set_enabled(True)   â†’  LSTM correction applied
-"""
-
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
@@ -44,19 +17,11 @@ logger = logging.getLogger(__name__)
 INPUT_FEATURES = 4
 
 
-# â”€â”€â”€ Model factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 def _build_model(
     hidden_size: int = 64,
     num_layers:  int = 2,
     dropout:     float = 0.2,
-) -> keras.Model:
-    """
-    Keras functional-API model.
-
-    Stack of Bidirectional-LSTM layers followed by a dense correction head.
-    Each LSTM returns full sequences so every edge gets its own correction.
-    """
+) -> keras.Model:    
     inp = keras.Input(shape=(None, INPUT_FEATURES), name="edge_features")
     x = inp
 
@@ -85,22 +50,17 @@ def _build_model(
         bias_initializer="zeros",
         name="output",
     )(x)
-
-    # Squeeze last dim: (batch, seq_len, 1) â†’ (batch, seq_len)
+    
     out = layers.Lambda(lambda t: tf.squeeze(t, axis=-1), name="squeeze")(x)
 
     return keras.Model(inputs=inp, outputs=out, name="ev_lstm_corrector")
 
-
-# â”€â”€â”€ Masked MSE loss â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _masked_mse(y_true: tf.Tensor, y_pred: tf.Tensor, mask: tf.Tensor) -> tf.Tensor:
     """MSE computed only over non-padded positions."""
     sq = tf.square(y_pred - y_true)
     return tf.reduce_sum(sq * mask) / (tf.reduce_sum(mask) + 1e-8)
 
-
-# â”€â”€â”€ Public corrector class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class AdvancedLSTMCorrector:
     """
@@ -160,8 +120,7 @@ class AdvancedLSTMCorrector:
         if os.path.exists(self._weights_path):
             self.load()
 
-    # â”€â”€â”€ Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+    
     def set_enabled(self, state: bool) -> None:
         self.enabled = state
         logger.info("AdvancedLSTMCorrector %s", "ENABLED" if state else "DISABLED")
@@ -169,8 +128,7 @@ class AdvancedLSTMCorrector:
     def is_enabled(self) -> bool:
         return self.enabled
 
-    # â”€â”€â”€ Feature extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+    
     def extract_features(self, G, route: List[str], evpm) -> np.ndarray:
         seq = []
         for i in range(len(route) - 1):
@@ -193,8 +151,7 @@ class AdvancedLSTMCorrector:
         logger.debug("Norm stats updated  mean=%s  std=%s",
                      self._norm_mean, self._norm_std)
 
-    # â”€â”€â”€ Inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+   
     def correct_route(self, G, route: List[str], evpm) -> List[float]:
         """
         Return corrected energy (kWh) per edge for *route*.
@@ -226,8 +183,7 @@ class AdvancedLSTMCorrector:
 
         return (corrected_wh / 1000.0).tolist()
 
-    # â”€â”€â”€ Training â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+    
     @tf.function(reduce_retracing=True)
     def _train_step(
         self,
@@ -337,8 +293,6 @@ class AdvancedLSTMCorrector:
         self.save()
         return {"loss_history": loss_history, "epochs_trained": epochs}
 
-    # â”€â”€â”€ Persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
     def save(self, path: Optional[str] = None) -> None:
         """Save model weights and metadata (norm stats, history) to disk."""
         w_path = (path or self.model_path) + ".weights.h5"
@@ -383,8 +337,6 @@ class AdvancedLSTMCorrector:
             logger.warning("AdvancedLSTMCorrector: failed to load â€” %s", exc)
             return False
 
-    # â”€â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
     def status(self) -> Dict[str, Any]:
         """Return a JSON-serialisable status dict for /lstm/status."""
         return {
@@ -401,6 +353,4 @@ class AdvancedLSTMCorrector:
         }
 
 
-# Alias so main.py and train_lstm.py can import either name
 LSTMCorrector = AdvancedLSTMCorrector
-

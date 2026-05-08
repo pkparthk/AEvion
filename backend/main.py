@@ -15,7 +15,7 @@ G = generate_city_graph()
 app = FastAPI()
 evpm = EVPM()
 
-# ─── LSTM Corrector (modular toggle) ─────────────────────────────────────────
+# LSTM Corrector (modular toggle) 
 # Set enabled=False here (or call POST /lstm/toggle) to bypass LSTM at runtime.
 lstm_corrector = AdvancedLSTMCorrector(
     enabled=True,
@@ -53,7 +53,7 @@ from milp_selection import select_best_route
 from fastapi import Query
 
 @app.get("/route")
-def compute_route(start: str, end: str = Query(None), dest: str = Query(None), mode: str = "time"):
+def compute_route(start: str, end: str = Query(None), dest: str = Query(None), mode: str = "time", initial_soc: float = 50.0):
     end_node = end if end is not None else dest
     if not start or not end_node:
         raise HTTPException(status_code=400, detail="Missing start or end node")
@@ -72,11 +72,13 @@ def compute_route(start: str, end: str = Query(None), dest: str = Query(None), m
             "reachable_nodes": []
         }
     
+    battery_capacity = 100.0
     veh_params = {
-        "battery_kwh": 100.0,
-        "initial_soc_kwh": 50.0,
-        "consumption_kwh_per_km": 0.1,
-        "max_charge_power_kw": 50.0
+        "battery_kwh": battery_capacity,
+        "initial_soc_kwh": battery_capacity * (initial_soc / 100.0),
+        "consumption_kwh_per_km": 0.2, # fallback since evpm handles physics now
+        "max_charge_power_kw": 50.0,
+        "min_soc_reserve_kwh": 0.0
     }
     
     best, all_results = select_best_route(
@@ -124,7 +126,7 @@ def compute_route(start: str, end: str = Query(None), dest: str = Query(None), m
     veh_params_reachable = {
         "battery_kwh": 60.0,
         "initial_soc_kwh": 30.0,
-        "consumption_kwh_per_km": 0.18,
+        "consumption_kwh_per_km": 2.0,
         "max_charge_power_kw": 50.0
     }
     reachable = compute_reachable_nodes(G, start, veh_params=veh_params_reachable)
@@ -174,7 +176,7 @@ def compute_reachable_nodes(G, start, veh_params):
     return list(reachable)
 
 
-# ─── LSTM Endpoints ───────────────────────────────────────────────────────────
+# LSTM Endpoints 
 
 @app.get("/lstm/status")
 def lstm_status():

@@ -8,10 +8,6 @@ def generate_city_graph(
     road_removal=0.12,  # % of roads to delete
     charger_ratio=0.25,  # % of nodes that are charging stations
 ):
-    """
-    Generates a realistic synthetic city graph using random geometric distribution.
-    Nodes become intersections, edges become roads.
-    """
 
     base = nx.random_geometric_graph(num_nodes, radius)
 
