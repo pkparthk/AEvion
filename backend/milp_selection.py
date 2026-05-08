@@ -13,7 +13,7 @@ except ImportError:
 DEFAULT_VEH = {
     "battery_kwh": 60.0,
     "initial_soc_kwh": 30.0,
-    "consumption_kwh_per_km": 0.2,
+    "consumption_kwh_per_km": 0.7,
     "max_charge_power_kw": 50.0,
     "min_soc_reserve_kwh": 0.0
 }
