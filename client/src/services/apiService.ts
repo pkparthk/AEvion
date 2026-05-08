@@ -82,7 +82,7 @@ class AevionApiService {
       console.log("📊 Pipeline: KSP → Physics → LSTM → MILP");
 
       const res: AxiosResponse<RouteResponse> = await apiClient.get("/route", {
-        params: { start: startNode, end: endNode, mode },
+        params: { start: startNode, end: endNode, mode, initial_soc: initialSOC_percent },
       });
 
       const data = res.data;

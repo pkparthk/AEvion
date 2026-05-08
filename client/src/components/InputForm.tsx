@@ -21,6 +21,7 @@ const InputForm: React.FC<InputFormProps> = ({
   const [startNode, setStartNode] = useState<string>("");
   const [endNode, setEndNode] = useState<string>("");
   const [initialSOC, setInitialSOC] = useState<number>(80);
+  const [mode, setMode] = useState<"time" | "cost" | "safety">("time");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -61,6 +62,7 @@ const InputForm: React.FC<InputFormProps> = ({
         startNode,
         endNode,
         initialSOC_percent: initialSOC,
+        mode,
       };
 
       onRouteRequest(request);
@@ -156,7 +158,7 @@ const InputForm: React.FC<InputFormProps> = ({
             </div>
 
             <fieldset
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
               aria-labelledby="route-config"
             >
               <legend id="route-config" className="sr-only">
@@ -267,6 +269,34 @@ const InputForm: React.FC<InputFormProps> = ({
                     {errors.endNode}
                   </motion.p>
                 )}
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <label
+                  htmlFor="mode-select"
+                  className="block text-sm font-semibold text-purple-300 mb-3"
+                >
+                  Optimization Mode
+                </label>
+                <div className="relative">
+                  <select
+                    id="mode-select"
+                    aria-label="Optimization mode"
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value as "time" | "cost" | "safety")}
+                    className="input-glass w-full appearance-none focus:ring-2 focus:ring-purple-400"
+                  >
+                    <option value="time" className="bg-dark-800 text-white">Time Optimized</option>
+                    <option value="cost" className="bg-dark-800 text-white">Cost Optimized</option>
+                    <option value="safety" className="bg-dark-800 text-white">Safety Optimized (SOC)</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <Settings size={16} className="text-gray-400" />
+                  </div>
+                </div>
               </motion.div>
             </fieldset>
           </motion.div>

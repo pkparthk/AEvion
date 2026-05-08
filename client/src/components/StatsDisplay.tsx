@@ -74,7 +74,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({
   const statsConfig = [
     {
       title: "Total Distance",
-      value: `${formatNumber(totalDistanceKm)} km`,
+      value: `${formatNumber(totalDistanceKm)} Units`,
       icon: Route,
       color: "electric",
       bgColor: "electric-500/10",
