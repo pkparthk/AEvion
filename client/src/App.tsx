@@ -24,6 +24,7 @@ const App: React.FC = () => {
   const [isLoadingGraph, setIsLoadingGraph] = useState<boolean>(false);
   const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
     loadGraphData();
@@ -32,6 +33,7 @@ const App: React.FC = () => {
   const loadGraphData = async (): Promise<void> => {
     try {
       setError(null);
+      setWarning(null);
       setIsLoadingGraph(true);
 
       const [graph, nodes] = await Promise.all([
@@ -60,6 +62,7 @@ const App: React.FC = () => {
   const handleRouteRequest = async (request: RouteRequest): Promise<void> => {
     try {
       setError(null);
+      setWarning(null);
       setIsLoadingRoute(true);
       setRouteResponse(null);
       setBestRoute(null);
@@ -71,10 +74,17 @@ const App: React.FC = () => {
       setRouteResponse(result);
 
       if (result.error) {
-        setError(
-          result.error_reason ||
-            `Route error: ${result.error}. Some nodes may be unreachable with current battery settings.`,
-        );
+        if (
+          result.error === "battery_constraint" ||
+          result.error === "unreachable"
+        ) {
+          setWarning(
+            result.error_reason ||
+              `Route warning: ${result.error}. Some nodes may be unreachable with current battery settings.`,
+          );
+        } else {
+          setError(result.error_reason || `Route error: ${result.error}.`);
+        }
       } else if (result.best) {
         setBestRoute(result.best);
         console.log("✅ Route optimization completed:", {
@@ -102,6 +112,7 @@ const App: React.FC = () => {
     setRouteResponse(null);
     setBestRoute(null);
     setError(null);
+    setWarning(null);
   };
 
   return (
@@ -168,6 +179,33 @@ const App: React.FC = () => {
                 >
                   Retry Connection
                 </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
+        {warning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="mb-6"
+          >
+            <div className="glass-card-dark border border-yellow-500/30 bg-yellow-500/10 rounded-xl p-6">
+              <div className="flex items-center">
+                <motion.span
+                  className="text-yellow-400 text-2xl mr-4"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  ⚠️
+                </motion.span>
+                <div className="flex-1">
+                  <div className="font-semibold text-yellow-300 text-lg">
+                    Route Unreachable
+                  </div>
+                  <div className="text-yellow-100 mt-1">{warning}</div>
+                </div>
               </div>
             </div>
           </motion.div>
