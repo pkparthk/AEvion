@@ -68,7 +68,7 @@ def compute_route(start: str, end: str = Query(None), dest: str = Query(None), m
             "best": None,
             "all": [],
             "error": "unreachable",
-            "error_reason": "Start and destination nodes are not connected in the graph",
+            "error_reason": "No valid roads connect the selected origin and destination.",
             "reachable_nodes": []
         }
     
@@ -76,7 +76,7 @@ def compute_route(start: str, end: str = Query(None), dest: str = Query(None), m
     veh_params = {
         "battery_kwh": battery_capacity,
         "initial_soc_kwh": battery_capacity * (initial_soc / 100.0),
-        "consumption_kwh_per_km": 0.2, # fallback since evpm handles physics now
+        "consumption_kwh_per_km": 1.5, 
         "max_charge_power_kw": 50.0,
         "min_soc_reserve_kwh": 0.0
     }
@@ -137,7 +137,7 @@ def compute_route(start: str, end: str = Query(None), dest: str = Query(None), m
             "best": None,
             "all": [enrich_route(stringify_ids(r)) for r in all_results],
             "error": "battery_constraint",
-            "error_reason": "Destination unreachable with current battery constraints",
+            "error_reason": "Destination is unreachable with your current initial SOC and battery constraints. Please increase the initial charge or choose a closer destination.",
             "reachable_nodes": reachable
         }
     

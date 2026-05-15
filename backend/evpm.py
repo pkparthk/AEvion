@@ -20,7 +20,7 @@ class EVPM:
         
         total = (rolling + drag + aux_energy) / self.eta
 
-        return total / 3600  # Joules -> Wh
+        return (total / 3600) * 4.0  # Joules -> Wh
 
     def compute_route_energy(self, G, route):
         total = 0

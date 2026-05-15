@@ -35,13 +35,13 @@ def generate_city_graph(
 
         x1, y1 = n1["x"], n1["y"]
         x2, y2 = n2["x"], n2["y"]
+        
+        dist = math.dist((x1, y1), (x2, y2)) * 150.0
 
-        dist = math.dist((x1, y1), (x2, y2))
+        speed = random.choice([50, 70, 90, 110])  # km/h        
+        travel_time_min = (dist / (speed * 1000.0)) * 60.0
 
-        speed = random.choice([30, 40, 50, 60])  # km/h
-        travel_time = dist / (speed * 1000 / 3600)
-
-        slope = random.uniform(-0.05, 0.12)  # -5% to +12% grade
+        slope = random.uniform(-0.05, 0.12)  
 
         H.add_edge(
             str(u),
@@ -49,14 +49,13 @@ def generate_city_graph(
             distance=dist,
             speed=speed,
             slope=slope,
-            travel_time=travel_time,
+            travel_time=travel_time_min,
         )
 
     add_charging_stations(H, charger_ratio)
 
     H = normalize_positions(H)
     return H
-
 
 
 
